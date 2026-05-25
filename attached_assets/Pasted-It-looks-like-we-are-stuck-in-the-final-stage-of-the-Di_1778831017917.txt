@@ -1,0 +1,42 @@
+It looks like we are stuck in the final stage of the **"Disconnected Pipeline"** issue. Even though you’ve done the hard work of setting up the database and the server, the "handshake" between them is failing.
+
+Here is the plain-English breakdown of what we have done and the exact wall we are hitting:
+
+### **1. What we have done so far**
+
+* **The Storage (Database):** You successfully created the `applications` table and inserted **5 rows** of job data (Google, Meta, etc.). We know the data is there and waiting.
+* **The Bridge (API Server):** You got the server to "listen" on **Port 3000**. This is the middleman that is supposed to grab data from the storage and give it to the website.
+* **The Display (Dashboard):** You have the website running, but it’s currently showing **0** because the middleman is handing it an empty plate.
+
+---
+
+### **2. The issue we are facing right now**
+
+The error on your screen (**"Failed query"**) means the server is calling out to the database, but the database isn't answering.
+
+**The specific reasons for this are usually one of two things:**
+
+1. **The Wrong "Address":** The server is still trying to talk to the database on **Port 5432** (the default), but your database is actually living on **Port 5433**.
+2. **The "Ghost" Environment:** When you start the server, the computer is "forgetting" the `DATABASE_URL` you typed, so the server doesn't know which password or port to use when it tries to run that `select` query.
+
+---
+
+### **3. How we fix the "Handshake"**
+
+To stop the "Failed query" error, we have to force the server to remember the address. We do this by injecting the environment variable directly into the start command so it can't be ignored.
+
+**Run this one command in your API Server terminal:**
+
+```bash
+npx cross-env DATABASE_URL=postgresql://postgres:spsg7@localhost:5433/fileorganizer PORT=3000 tsx src/index.ts
+
+```
+
+### **The "Moment of Truth" Test**
+
+Once you run that, refresh this specific page:
+**`http://localhost:3000/api/applications`**
+
+If that page shows your **Google/Meta data** instead of the error message, you have officially won. The "Bridge" is finally open, and your dashboard will automatically update to show your **5 applications**.
+
+Does that `cross-env` command finally clear the "Failed query" error on the white page?

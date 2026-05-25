@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "HireFlow AI"
+version = "1.0.0"
+id = "artifacts/hireflow"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25321
+
+[services.development]
+run = "pnpm --filter @workspace/hireflow run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/hireflow", "run", "build" ]
+publicDir = "artifacts/hireflow/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25321"
+BASE_PATH = "/"

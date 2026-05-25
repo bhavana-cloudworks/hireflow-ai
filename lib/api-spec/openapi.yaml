@@ -1,0 +1,534 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: HireFlow AI API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: applications
+    description: Job application tracking
+  - name: dashboard
+    description: Dashboard stats and analytics
+  - name: resume
+    description: Resume optimization
+  - name: interview
+    description: Interview preparation
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /applications:
+    get:
+      operationId: listApplications
+      tags: [applications]
+      summary: List all job applications
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Application"
+    post:
+      operationId: createApplication
+      tags: [applications]
+      summary: Create a new job application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicationInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Application"
+
+  /applications/{id}:
+    get:
+      operationId: getApplication
+      tags: [applications]
+      summary: Get a job application by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Application found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Application"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateApplication
+      tags: [applications]
+      summary: Update a job application
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicationPatch"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Application"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteApplication
+      tags: [applications]
+      summary: Delete a job application
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /applications/{id}/timeline:
+    get:
+      operationId: getApplicationTimeline
+      tags: [applications]
+      summary: Get status change timeline for an application
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Timeline entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimelineEntry"
+        "404":
+          description: Not found
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Stats summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/funnel:
+    get:
+      operationId: getDashboardFunnel
+      tags: [dashboard]
+      summary: Get application funnel data
+      responses:
+        "200":
+          description: Funnel breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FunnelEntry"
+
+  /dashboard/timeline:
+    get:
+      operationId: getDashboardTimeline
+      tags: [dashboard]
+      summary: Get applications over time (weekly)
+      responses:
+        "200":
+          description: Applications per week
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimelineDataPoint"
+
+  /dashboard/top-roles:
+    get:
+      operationId: getDashboardTopRoles
+      tags: [dashboard]
+      summary: Get top job roles applied to
+      responses:
+        "200":
+          description: Top roles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RoleCount"
+
+  /resume/analyze:
+    post:
+      operationId: analyzeResume
+      tags: [resume]
+      summary: Analyze resume against job description
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResumeAnalysisInput"
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumeAnalysisResult"
+
+  /interview/questions:
+    post:
+      operationId: generateInterviewQuestions
+      tags: [interview]
+      summary: Generate interview questions for a job type
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InterviewQuestionsInput"
+      responses:
+        "200":
+          description: Generated questions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InterviewQuestionsResult"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    Application:
+      type: object
+      required: [id, company, role, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        company:
+          type: string
+        role:
+          type: string
+        location:
+          type: ["string", "null"]
+        workType:
+          type: ["string", "null"]
+          description: "Remote, Hybrid, or Onsite"
+        status:
+          type: string
+          description: "Wishlist, Applied, Interviewing, Offer, or Rejected"
+        salaryMin:
+          type: ["integer", "null"]
+        salaryMax:
+          type: ["integer", "null"]
+        matchScore:
+          type: ["integer", "null"]
+          description: "AI-computed match score 0-100"
+        jobUrl:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        appliedDate:
+          type: ["string", "null"]
+          format: date
+        interviewDate:
+          type: ["string", "null"]
+          format: date-time
+          description: "Scheduled interview datetime (set when Applied)"
+        offerDeadline:
+          type: ["string", "null"]
+          format: date-time
+          description: "Offer acceptance deadline (set when Interviewing)"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ApplicationInput:
+      type: object
+      required: [company, role]
+      properties:
+        company:
+          type: string
+          minLength: 1
+        role:
+          type: string
+          minLength: 1
+        location:
+          type: string
+        workType:
+          type: string
+        status:
+          type: string
+          default: "Wishlist"
+        salaryMin:
+          type: integer
+        salaryMax:
+          type: integer
+        matchScore:
+          type: integer
+        jobUrl:
+          type: string
+        notes:
+          type: string
+        appliedDate:
+          type: string
+          format: date
+        interviewDate:
+          type: string
+          format: date-time
+        offerDeadline:
+          type: string
+          format: date-time
+
+    ApplicationPatch:
+      type: object
+      properties:
+        company:
+          type: string
+        role:
+          type: string
+        location:
+          type: string
+        workType:
+          type: string
+        status:
+          type: string
+        salaryMin:
+          type: integer
+        salaryMax:
+          type: integer
+        matchScore:
+          type: integer
+        jobUrl:
+          type: string
+        notes:
+          type: string
+        appliedDate:
+          type: string
+          format: date
+        interviewDate:
+          type: string
+          format: date-time
+        offerDeadline:
+          type: string
+          format: date-time
+
+    TimelineEntry:
+      type: object
+      required: [id, applicationId, status, createdAt]
+      properties:
+        id:
+          type: integer
+        applicationId:
+          type: integer
+        status:
+          type: string
+        note:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    DashboardStats:
+      type: object
+      required: [totalApplications, interviews, offers, rejections, avgResponseTimeDays, avgMatchScore, vsLastMonth]
+      properties:
+        totalApplications:
+          type: integer
+        interviews:
+          type: integer
+        offers:
+          type: integer
+        rejections:
+          type: integer
+        avgResponseTimeDays:
+          type: number
+        avgMatchScore:
+          type: ["number", "null"]
+        vsLastMonth:
+          $ref: "#/components/schemas/VsLastMonth"
+
+    VsLastMonth:
+      type: object
+      required: [applications, interviews, offers, rejections]
+      properties:
+        applications:
+          type: number
+          description: "Percent change vs last month"
+        interviews:
+          type: number
+        offers:
+          type: number
+        rejections:
+          type: number
+
+    FunnelEntry:
+      type: object
+      required: [stage, count]
+      properties:
+        stage:
+          type: string
+        count:
+          type: integer
+        conversionRate:
+          type: ["number", "null"]
+
+    TimelineDataPoint:
+      type: object
+      required: [date, count]
+      properties:
+        date:
+          type: string
+        count:
+          type: integer
+
+    RoleCount:
+      type: object
+      required: [role, count, percentage]
+      properties:
+        role:
+          type: string
+        count:
+          type: integer
+        percentage:
+          type: number
+
+    ResumeAnalysisInput:
+      type: object
+      required: [resumeText, jobDescription]
+      properties:
+        resumeText:
+          type: string
+          minLength: 1
+        jobDescription:
+          type: string
+          minLength: 1
+
+    ResumeAnalysisResult:
+      type: object
+      required: [atsScore, missingKeywords, suggestions, breakdown]
+      properties:
+        atsScore:
+          type: integer
+          description: "Overall ATS score 0-100"
+        missingKeywords:
+          type: array
+          items:
+            type: string
+        suggestions:
+          type: array
+          items:
+            type: string
+        breakdown:
+          $ref: "#/components/schemas/ResumeBreakdown"
+
+    ResumeBreakdown:
+      type: object
+      required: [impact, skills, experience, keywords, formatting]
+      properties:
+        impact:
+          type: integer
+        skills:
+          type: integer
+        experience:
+          type: integer
+        keywords:
+          type: integer
+        formatting:
+          type: integer
+
+    InterviewQuestionsInput:
+      type: object
+      required: [jobType]
+      properties:
+        jobType:
+          type: string
+          minLength: 1
+        experienceLevel:
+          type: string
+          description: "Junior, Mid, Senior"
+
+    InterviewQuestionsResult:
+      type: object
+      required: [jobType, behavioral, technical, systemDesign]
+      properties:
+        jobType:
+          type: string
+        behavioral:
+          type: array
+          items:
+            type: string
+        technical:
+          type: array
+          items:
+            type: string
+        systemDesign:
+          type: array
+          items:
+            type: string

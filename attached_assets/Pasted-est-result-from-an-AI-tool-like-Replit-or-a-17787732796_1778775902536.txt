@@ -1,0 +1,59 @@
+est-result-from-an-AI-tool-like-Replit-or-a_1778773279679.txt
+To get the best result from an AI tool like Replit or an agent, you need a **system-level technical prompt**. This
+prompt tells the AI not just what to build, but how to architect it to look like a high-end SaaS product.
+Copy and paste the prompt below.
+---
+# 🚀 Master Prompt for Replit Agent / Builder
+**Project Name:** HireFlow AI (Professional AI Career Operating System)
+**Tech Stack Requirements:**
+* **Framework:** Next.js 14+ (App Router)
+* **Styling:** Tailwind CSS (Dark Mode SaaS Theme)
+* **Icons:** Lucide-React
+* **Components:** Radix UI or Shadcn/UI (for Modals, Tabs, and Tooltips)
+* **Charts:** Recharts (for Analytics)
+* **Animations:** Framer Motion (for "Micro-interactions" and smooth transitions)
+**Visual Identity (The "Design System"):**
+* **Background:** `#0B0E14` (Deep Charcoal/Black)
+* **Card Background:** `rgba(255, 255, 255, 0.03)` with `backdrop-filter: blur(12px)` and `border: 1px solid
+rgba(255, 255, 255, 0.1)`
+* **Accent Colors:** Cyan (#06b6d4) for primary actions, Purple (#a855f7) for AI features.
+* **Typography:** Inter or Plus Jakarta Sans.
+**Application Structure & Logic:**
+Create a fully functional multi-page dashboard with the following features:
+### 1. Global Navigation
+* **Sidebar:** Permanent left sidebar with navigation to Dashboard, Job Tracker, Resume Optimizer, Analytics,
+Interview Prep, and Settings.
+* **Topbar:** Breadcrumbs showing the current page and one **Primary CTA** that changes per page (e.g.,
+"Add Application" on Dashboard, "Optimize" on Resume page).
+### 2. Page: Dashboard (The Command Center)
+5/14/26, 9:54 PM Job Flow AI - Replit
+https://replit.com/@kyaswanth6017/Job-Flow-AI 1/2
+* **Metric Cards:** 4 high-impact cards (Applications, Interviews, Offers, Avg. Match Score).
+* **Main Grid:** * Left Column: A "Job Funnel" bar chart showing conversion rates.
+* Right Column: An **AI Copilot Panel** that suggests: "Your resume is a 40% match for [Company Name].
+Click to fix."
+### 3. Page: Job Tracker (Kanban Board)
+* **Functionality:** Create a Kanban board with columns: "Applied", "Interviewing", "Offer", "Rejected".
+* **Job Cards:** Must include Company Name, Role, Salary Range, Location Tag (Remote/Hybrid), and an **AI
+Match Badge** (e.g., "92% Match").
+* **Action:** Clicking a card opens a slide-over with job details.
+### 4. Page: Resume Optimizer (The "Hook")
+* **Feature:** A split-screen view.
+* Left side: Markdown editor or Text area to paste a Resume.
+* Right side: **AI Analysis Engine**. When a button is clicked, simulate a scan that generates an ATS score and
+a list of "Missing Keywords" based on a target Job Description.
+### 5. Page: Interview Prep
+* **Feature:** A "Question Generator." The user selects a job type (e.g., Cloud Engineer), and the app
+generates a list of Behavioral, Technical, and System Design questions.
+### 6. Interactive Requirements (The "10/10" Polish)
+* **State Management:** Use LocalStorage so that when I add a job or update a resume, the data persists after
+refreshing.
+* **Animations:** Add a "Shimmer" loading effect to the AI cards. Use `framer-motion` for cards to pop in when
+the page loads.
+* **Empty States:** If there are no jobs, show a clean "No applications yet" illustration.
+**Final Instruction to AI Agent:**
+"Do not build a placeholder. Build a fully responsive, functional SaaS application. Use clean, modular
+component architecture. Ensure the UI feels expensive, fast, and high-end. Focus on the 'AI Copilot' aesthetic—
+glassmorphism, subtle glows, and precise alignment."
+5/14/26, 9:54 PM Job Flow AI - Replit
+https://replit.com/@kyaswanth6017/Job-Flow-AI 2/2
