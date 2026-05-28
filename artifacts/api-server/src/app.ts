@@ -6,6 +6,10 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
+app.use(cors());
+app.use(express.json());
+
+// Logging middleware
 app.use(
   pinoHttp({
     logger,
@@ -14,7 +18,7 @@ app.use(
         return {
           id: req.id,
           method: req.method,
-          url: req.url?.split("?")[0],
+          url: req.url.split("?")[0],
         };
       },
       res(res) {
@@ -23,12 +27,10 @@ app.use(
         };
       },
     },
-  }),
+  })
 );
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
+// ✅ Mount all routes under /api
 app.use("/api", router);
 
 export default app;

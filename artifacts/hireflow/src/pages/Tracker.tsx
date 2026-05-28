@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Briefcase, Loader2, Edit2,
-  Trash2, Calendar as CalendarIcon,
+  Trash2, Calendar as CalendarIcon, Clock, Send
 } from "lucide-react";
 import {
   useListApplications, useCreateApplication, useUpdateApplication,
@@ -47,7 +47,35 @@ function getDaysUntil(dateStr: string | null | undefined): number | null {
   if (!dateStr) return null;
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return null;
-  return Math.ceil((d.getTime() - Date.now()) / 86400000);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - today.getTime()) / 86400000);
+}
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+}
+
+/** 
+ * Contextual Logic: 
+ * - Applied: Always shows the exact date.
+ * - Interview/Offer: Shows relative "IN X DAYS" for future, Today/Tomorrow for now.
+ */
+function getHumanDateLabel(daysLeft: number | null, originalDate: string, status: Status) {
+  if (daysLeft === null) return "SET DATE";
+  
+  // History columns just show the date
+  if (status === "Applied") return formatDate(originalDate);
+
+  // Future-focused columns show relative time
+  if (daysLeft === 0) return "TODAY";
+  if (daysLeft === 1) return "TOMORROW";
+  if (daysLeft > 1) return `IN ${daysLeft} DAYS`;
+  
+  // Revert to date if it's past
+  return formatDate(originalDate);
 }
 
 export default function Tracker() {
@@ -72,7 +100,19 @@ export default function Tracker() {
     return (rawApps || []).filter((app) => app && app.id && !evictedIds.includes(app.id));
   }, [rawApps, evictedIds]);
 
-  const appsByStatus = (status: Status) => apps.filter((a) => a.status === status);
+  const appsByStatus = (status: Status) => {
+    const filtered = apps.filter((a) => a.status === status);
+    if (status === "Wishlist" || status === "Rejected") return filtered;
+
+    return filtered.sort((a: any, b: any) => {
+      const dateA = status === "Applied" ? a.appliedDate : status === "Interviewing" ? a.interviewDate : a.offerDeadline;
+      const dateB = status === "Applied" ? b.appliedDate : status === "Interviewing" ? b.interviewDate : b.offerDeadline;
+      if (!dateA && !dateB) return 0;
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+      return new Date(dateA).getTime() - new Date(dateB).getTime();
+    });
+  };
 
   const openEdit = (id: number) => {
     const app = apps.find((a) => a.id === id) as any;
@@ -103,9 +143,9 @@ export default function Tracker() {
     createApp.mutate({
       data: {
         ...form,
-        salaryMin: parseInt(form.salaryMin) || undefined,
-        salaryMax: parseInt(form.salaryMax) || undefined,
-        matchScore: parseInt(form.matchScore) || undefined,
+        salaryMin: form.salaryMin === "" ? null : parseInt(form.salaryMin),
+        salaryMax: form.salaryMax === "" ? null : parseInt(form.salaryMax),
+        matchScore: form.matchScore === "" ? null : parseInt(form.matchScore),
       } as any
     }, {
       onSuccess: () => {
@@ -124,9 +164,9 @@ export default function Tracker() {
       id: editingApp,
       data: {
         ...editForm,
-        salaryMin: parseInt(editForm.salaryMin) || undefined,
-        salaryMax: parseInt(editForm.salaryMax) || undefined,
-        matchScore: parseInt(editForm.matchScore) || undefined,
+        salaryMin: editForm.salaryMin === "" ? null : parseInt(editForm.salaryMin),
+        salaryMax: editForm.salaryMax === "" ? null : parseInt(editForm.salaryMax),
+        matchScore: editForm.matchScore === "" ? null : parseInt(editForm.matchScore),
       } as any
     }, {
       onSuccess: () => {
@@ -160,14 +200,12 @@ export default function Tracker() {
 
   return (
     <div className="px-6 pb-6 h-full flex flex-col">
-      {/* Compact Header to remove the top space */}
       <div className="flex items-center justify-end py-3">
         <Button onClick={() => setShowAdd(true)} className="gap-2 bg-primary text-primary-foreground h-8 text-xs font-semibold">
           <Plus size={14} /> Add Job
         </Button>
       </div>
 
-      {/* Kanban Board */}
       <div className="flex gap-3 flex-1 overflow-x-auto pb-2">
         {STATUSES.map((status) => {
           const colApps = appsByStatus(status);
@@ -182,14 +220,12 @@ export default function Tracker() {
               <div className={cn("flex-1 rounded-b-xl border border-t-0 p-2 space-y-2 overflow-y-auto min-h-[200px] bg-card/40", style.border)}>
                 <AnimatePresence>
                   {colApps.map((app: any) => {
-                    const relevantDate =
-                      app.status === "Applied" ? app.interviewDate :
-                      (app.status === "Interviewing" || app.status === "Offer") ? app.offerDeadline :
-                      null;
+                    const relevantDate = 
+                      app.status === "Applied" ? app.appliedDate :
+                      app.status === "Interviewing" ? app.interviewDate :
+                      app.status === "Offer" ? app.offerDeadline : null;
 
                     const daysLeft = getDaysUntil(relevantDate);
-                    const isUrgent = daysLeft !== null && daysLeft <= 2 && daysLeft >= 0;
-                    const isPast = daysLeft !== null && daysLeft < 0;
 
                     return (
                       <motion.div
@@ -205,38 +241,29 @@ export default function Tracker() {
                             <p className="text-xs font-semibold truncate text-foreground">{app.company}</p>
                             <p className="text-[10px] text-muted-foreground truncate">{app.role}</p>
                           </div>
-                          {app.matchScore && (
+                          {app.matchScore != null && app.matchScore > 0 && (
                             <span className="text-[10px] font-bold text-primary shrink-0">{app.matchScore}%</span>
                           )}
                         </div>
 
-                        {/* Contextual date badge */}
                         {["Applied", "Interviewing", "Offer"].includes(app.status) && (
                           <div className="mt-2 flex items-center justify-between">
                             <span className="text-[9px] text-zinc-600 uppercase tracking-wider font-mono">
-                              {app.status === "Applied" ? "Interview" : "Deadline"}
+                              {app.status === "Applied" ? "Applied on" : app.status === "Interviewing" ? "Interview" : "Deadline"}
                             </span>
-                            {!relevantDate ? (
-                              <div className="text-[8px] uppercase font-bold text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded border border-primary/20">
-                                Set Date
-                              </div>
-                            ) : isPast ? (
-                              <div className="text-[8px] uppercase font-bold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20">
-                                Passed
-                              </div>
-                            ) : isUrgent ? (
-                              <div className="text-[8px] uppercase font-bold text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/20">
-                                {daysLeft === 0 ? "Today!" : `${daysLeft}d left!`}
-                              </div>
-                            ) : (
-                              <div className="text-[8px] uppercase font-bold text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/20">
-                                T-{daysLeft}d
-                              </div>
-                            )}
+                            
+                            <div className={cn(
+                              "text-[8px] uppercase font-bold px-1.5 py-0.5 rounded border transition-none",
+                              !relevantDate ? "text-primary/80 bg-primary/10 border-primary/20" :
+                              daysLeft !== null && daysLeft < 0 ? "text-red-400 bg-red-500/10 border-red-500/20" :
+                              daysLeft === 0 || daysLeft === 1 ? "text-orange-400 bg-orange-500/10 border-orange-500/20" :
+                              "text-cyan-400 bg-cyan-500/10 border-cyan-500/20"
+                            )}>
+                              {getHumanDateLabel(daysLeft, relevantDate, app.status)}
+                            </div>
                           </div>
                         )}
 
-                        {/* Delete on hover */}
                         <button
                           onClick={(e) => { e.stopPropagation(); handleDelete(app.id); }}
                           className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-zinc-600 hover:text-red-400 p-0.5 rounded"
@@ -259,7 +286,6 @@ export default function Tracker() {
         })}
       </div>
 
-      {/* Add Dialog */}
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
         <DialogContent className="bg-card border-white/10 sm:max-w-md">
           <DialogHeader><DialogTitle>Add Job Application</DialogTitle></DialogHeader>
@@ -274,7 +300,6 @@ export default function Tracker() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
       <Dialog open={editingApp !== null} onOpenChange={(o) => !o && setEditingApp(null)}>
         <DialogContent className="bg-card border-white/10 sm:max-w-md">
           <DialogHeader><DialogTitle>Edit Application</DialogTitle></DialogHeader>
@@ -294,9 +319,7 @@ export default function Tracker() {
 
 function AppFormFields({ form, onChange }: { form: AppForm; onChange: (f: Partial<AppForm>) => void }) {
   const status = form.status as Status;
-  const showInterviewDate = status === "Applied" || status === "Interviewing";
-  const showOfferDeadline = status === "Interviewing" || status === "Offer";
-
+  
   return (
     <div className="grid gap-3 py-2 max-h-[65vh] overflow-y-auto pr-1">
       <div className="grid grid-cols-2 gap-3">
@@ -331,18 +354,31 @@ function AppFormFields({ form, onChange }: { form: AppForm; onChange: (f: Partia
         <Select value={form.status} onValueChange={(v) => onChange({ status: v })}>
           <SelectTrigger className="bg-black/20 border-white/10 h-9"><SelectValue /></SelectTrigger>
           <SelectContent className="bg-card border-white/10">
-            {["Wishlist", "Applied", "Interviewing", "Offer", "Rejected"].map(s => (
+            {STATUSES.map(s => (
               <SelectItem key={s} value={s}>{s}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {showInterviewDate && (
+      {status === "Applied" && (
+        <div className="space-y-1.5 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
+          <Label className="text-[11px] text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Send size={11} /> Application Sent Date
+          </Label>
+          <Input
+            type="date"
+            className="bg-black/20 border-white/10 h-9 [color-scheme:dark]"
+            value={form.appliedDate}
+            onChange={e => onChange({ appliedDate: e.target.value })}
+          />
+        </div>
+      )}
+
+      {status === "Interviewing" && (
         <div className="space-y-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
           <Label className="text-[11px] text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-            <CalendarIcon size={11} />
-            Interview Date &amp; Time
+            <CalendarIcon size={11} /> Interview Date & Time
           </Label>
           <Input
             type="datetime-local"
@@ -350,15 +386,13 @@ function AppFormFields({ form, onChange }: { form: AppForm; onChange: (f: Partia
             value={form.interviewDate}
             onChange={e => onChange({ interviewDate: e.target.value })}
           />
-          <p className="text-[10px] text-amber-400/60">When is your interview scheduled?</p>
         </div>
       )}
 
-      {showOfferDeadline && (
+      {status === "Offer" && (
         <div className="space-y-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
           <Label className="text-[11px] text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-            <CalendarIcon size={11} />
-            Offer Acceptance Deadline
+            <Clock size={11} /> Acceptance Deadline
           </Label>
           <Input
             type="datetime-local"
@@ -366,7 +400,6 @@ function AppFormFields({ form, onChange }: { form: AppForm; onChange: (f: Partia
             value={form.offerDeadline}
             onChange={e => onChange({ offerDeadline: e.target.value })}
           />
-          <p className="text-[10px] text-emerald-400/60">Deadline to accept or reject the offer.</p>
         </div>
       )}
 
