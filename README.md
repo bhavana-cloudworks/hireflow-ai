@@ -348,5 +348,5 @@ The project is fully functional in local development environments.
 
 ## Bhavana
 
-Cloud & AI Engineer | Systems Builder
+Cloud & AI Engineer 
 
