@@ -218,27 +218,27 @@ E --> F
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
-### 🖥️ Intelligent Dashboard
+### Intelligent Dashboard
 *Architected a high-level command center visualizing real-time application analytics, AI-driven 'Critical Signal' monitoring, and readiness tracking.*
 ![Dashboard](./artifacts/hireflow/Screenshots/dashboard.png)
 
 ---
 
-### 📋 Kanban Job Tracker
+### Kanban Job Tracker
 *End-to-end lifecycle management. A cinematic drag-and-drop interface to manage high-volume applications across complex hiring funnel stages.*
 ![Job Tracker](./artifacts/hireflow/Screenshots/job-tracker.png)
 
 ---
 
-### 📄 AI Resume Optimizer
+### AI Resume Optimizer
 *Leveraging LLM-powered analysis to provide instant ATS scoring, keyword alignment, and deep-dive skills coverage for targeted roles.*
 ![Resume Optimizer](./artifacts/hireflow/Screenshots/resume.png)
 
 ---
 
-### 🤖 AI Interview Prep
+### AI Interview Prep
 *Generating context-aware behavioral, technical, and system design questions tailored to specific seniority levels and job descriptions.*
 ![Interview Prep](./artifacts/hireflow/Screenshots/interview.png)
 
