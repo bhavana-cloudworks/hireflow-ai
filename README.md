@@ -350,6 +350,3 @@ The project is fully functional in local development environments.
 
 Cloud & AI Engineer | Systems Builder
 
-GitHub:
-
-https://github.com/YOUR_USERNAME
