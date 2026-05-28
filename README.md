@@ -303,7 +303,7 @@ Structured the application for independent feature scaling and maintainability.
 Clone repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/hireflow-ai.git
+git clone https://github.com/bhavana-cloudworks/hireflow-ai.git
 
 cd hireflow-ai
 
